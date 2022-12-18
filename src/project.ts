@@ -4,7 +4,7 @@ import { EOL } from "os";
 import path from "path";
 import prompts from "prompts";
 import yaml from "js-yaml";
-import { MAIN_SCRIPT } from "./structures.js";
+import { DEFAULT_LANG_FILE, MAIN_SCRIPT } from "./structures.js";
 
 export enum ProjectType {
     System = "system",
@@ -29,7 +29,12 @@ export type FoundryManifest = {
         verified: string;
         maximum: string;
     };
-    esmodules: string[];
+    esmodules?: string[];
+    languages?: {
+        lang: string;
+        name: string;
+        path: string;
+    }[];
 };
 
 export const getIronConfig = async () => {
@@ -101,7 +106,6 @@ export const createIronConfig = async (projectRoot?: string) => {
 
 export const createSystemConfig = async (
     ironConfig: IronConfig,
-    projectRoot: string
 ) => {
     const defaultSystemConfig = {
         id: ironConfig.canonicalName,
@@ -130,7 +134,7 @@ export const createSystemConfig = async (
     const systemConfig = { ...defaultSystemConfig, ...userSystemConfig };
 
     fs.writeFileSync(
-        path.join(projectRoot, "system.yml"),
+        path.join(ironConfig.rootPath, "system.yml"),
         yaml.dump(systemConfig)
     );
     return systemConfig as FoundryManifest;
@@ -177,7 +181,6 @@ export const createTemplateConfig = async (projectRoot: string) => {
 
 export const createModuleConfig = async (
     ironConfig: IronConfig,
-    projectRoot: string
 ) => {
     const defaultModuleConfig = {
         id: ironConfig.canonicalName,
@@ -206,7 +209,7 @@ export const createModuleConfig = async (
     const moduleConfig = { ...defaultModuleConfig, ...userModuleConfig };
 
     fs.writeFileSync(
-        path.join(projectRoot, "module.yml"),
+        path.join(ironConfig.rootPath, "module.yml"),
         yaml.dump(moduleConfig)
     );
     return moduleConfig as FoundryManifest;
@@ -255,8 +258,8 @@ export const createREADME = async (
     }
 };
 
-export const createMainScript = async (ironConfig: IronConfig, projectRoot: string) => {
-    const mainPath = path.join(projectRoot, "main.js");
+export const createMainScript = async (ironConfig: IronConfig) => {
+    const mainPath = path.join(ironConfig.rootPath, "main.js");
     if (!fs.existsSync(mainPath)) {
         fs.writeFileSync(mainPath, MAIN_SCRIPT);
         const manifest = await getManifest(ironConfig)
@@ -266,4 +269,27 @@ export const createMainScript = async (ironConfig: IronConfig, projectRoot: stri
         manifest.esmodules.push("main.js");
         saveManifest(ironConfig, manifest);
     }
+}
+
+export const createLanguage = async (ironConfig: IronConfig, languageCode: string, languageName: string, baseLanguage?: string) => {
+    const langPath = path.join(ironConfig.rootPath, "lang", `${languageCode}.yml`);
+    if (!fs.existsSync(langPath)) {
+        fs.mkdirSync(path.join(ironConfig.rootPath, "lang"), { recursive: true });
+    }
+    const baseLangPath = path.join(ironConfig.rootPath, "lang", `${baseLanguage}.yml`);
+    if (baseLanguage && fs.existsSync(baseLangPath)) {
+        fs.copyFileSync(baseLangPath, langPath);
+    } else {
+        fs.writeFileSync(langPath, DEFAULT_LANG_FILE);
+    }
+    const manifest = await getManifest(ironConfig)
+    if (!manifest.languages) {
+        manifest.languages = [];
+    }
+    manifest.languages.push({
+        lang: languageCode,
+        name: languageName,
+        path: `lang/${languageCode}.yml`,
+    });
+    saveManifest(ironConfig, manifest);
 }

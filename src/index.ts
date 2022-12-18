@@ -4,7 +4,7 @@ import fs from "fs";
 import { program } from "commander";
 import path from "path";
 import { build } from "./build.js";
-import { createIronConfig, createMainScript, createModuleConfig, createPkg, createSystemConfig, createTemplateConfig, getIronConfig, ProjectType } from "./project.js";
+import { createIronConfig, createLanguage, createMainScript, createModuleConfig, createPkg, createSystemConfig, createTemplateConfig, getIronConfig, ProjectType } from "./project.js";
 import { downloadFoundry, getFoundryLatestVersion, listFoundryVersions, startFoundry } from "./foundry.js";
 
 const IRON_VERSION = "0.0.1";
@@ -54,13 +54,14 @@ program.command("new [directory]")
         const ironConfig = await createIronConfig(projectRoot);
         let manifest
         if (ironConfig.type === ProjectType.System) {
-            manifest = await createSystemConfig(ironConfig, projectRoot);
+            manifest = await createSystemConfig(ironConfig);
             await createTemplateConfig(projectRoot);
         } else {
-            manifest = await createModuleConfig(ironConfig, projectRoot);
+            manifest = await createModuleConfig(ironConfig);
         }
         await createPkg(manifest, projectRoot);
-        await createMainScript(ironConfig, projectRoot);
+        await createMainScript(ironConfig);
+        await createLanguage(ironConfig, "en", "English");
     });
 
 const foundry = program.command("foundry")
