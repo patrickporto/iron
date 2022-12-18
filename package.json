@@ -1,8 +1,23 @@
 {
-  "devDependencies": {
-    "@types/node": "^18.11.17",
-    "nodemon": "^2.0.20",
-    "ts-node": "^10.9.1",
-    "typescript": "^4.9.4"
-  }
+    "name": "iron",
+    "version": "1.0.0",
+    "main": "./dist/index.js",
+    "bin": {
+        "iron": "./dist/index.js"
+    },
+    "scripts": {
+        "dev": "nodemon --watch 'src/**/*.ts' --exec 'npx tsc'",
+        "dev:windows": "nodemon --watch 'src/**/*.ts' --exec \"npx tstsc\"",
+        "build": "npx tsc"
+    },
+    "devDependencies": {
+        "@types/node": "^18.11.17",
+        "nodemon": "^2.0.20",
+        "ts-node": "^10.9.1",
+        "typescript": "^4.9.4"
+    },
+    "dependencies": {
+        "chalk": "^5.2.0",
+        "commander": "^9.4.1"
+    }
 }
