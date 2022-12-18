@@ -87,6 +87,17 @@ foundry.command("start [version]")
         startFoundry(ironConfig, foundryVersion);
     });
 
+const languages = program.command("languages").alias("lang");
+languages.command("add <lang> <name> [base]")
+    .description("Add a language")
+    .action(async (lang: string, name: string, base: string) => {
+        let ironConfig = await getIronConfig();
+        if (!ironConfig) {
+            return;
+        }
+        await createLanguage(ironConfig, lang, name, base || "en");
+    });
+
 
 program.parse(process.argv);
 
