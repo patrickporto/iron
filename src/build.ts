@@ -1,5 +1,6 @@
 import chalk from "chalk";
 import fs from "fs";
+import glob from "glob";
 import Handlebars from "handlebars";
 import yaml from "js-yaml";
 import path from "path";
@@ -8,17 +9,18 @@ import { IronConfig } from "./project.js";
 const getProjectPackageJson = async () => {
     try {
         return JSON.parse(fs.readFileSync("./package.json", "utf-8"));
-    } catch(e) {
-        return {}
+    } catch (e) {
+        return {};
     }
-}
-
+};
 
 const buildConfig = (ironConfig: IronConfig) => {
-    const projectConfigName = `${ironConfig.type}.yml`
+    const projectConfigName = `${ironConfig.type}.yml`;
     let projectConfig;
     try {
-        projectConfig = yaml.load(fs.readFileSync(`./${projectConfigName}`, "utf-8"));
+        projectConfig = yaml.load(
+            fs.readFileSync(`./${projectConfigName}`, "utf-8")
+        );
     } catch (e) {
         console.log(chalk.red(`${projectConfigName} not found.`));
         throw e;
@@ -28,33 +30,62 @@ const buildConfig = (ironConfig: IronConfig) => {
     //     return JSON.parse(fs.readFileSync("./package2.json", "utf-8"))[key];
     // });
 
-    let compiledProjectConfig
+    let compiledProjectConfig;
     try {
-        const projectConfigTemplate = Handlebars.compile(JSON.stringify(projectConfig, null, 4))
+        const projectConfigTemplate = Handlebars.compile(
+            JSON.stringify(projectConfig, null, 4)
+        );
         compiledProjectConfig = projectConfigTemplate({
             pkg: getProjectPackageJson(),
             ...ironConfig,
-        })
+        });
     } catch (e) {
         console.log(chalk.red(`Invalid ${projectConfigName}.`));
-        console.error(e)
+        console.error(e);
         throw e;
     }
 
     try {
-        fs.writeFileSync(`${ironConfig?.distPath ?? '.'}${path.sep}system.json`, compiledProjectConfig);
+        fs.writeFileSync(
+            `${ironConfig?.distPath ?? "."}${path.sep}system.json`,
+            compiledProjectConfig
+        );
     } catch (e) {
         console.error(e);
         throw e;
     }
-}
+};
+
+const buildLang = (ironConfig: IronConfig) => {
+    for (const langPath of glob.sync("./lang/*.yml")) {
+        let langConfig;
+        try {
+            langConfig = yaml.load(fs.readFileSync(langPath, "utf-8"));
+        } catch (e) {
+            console.log(chalk.red(`Invalid ${langPath}.`));
+            throw e;
+        }
+        const langExt = path.extname(langPath);
+        const langName = path.basename(langPath, langExt);
+        const langDistDir = `${ironConfig?.distPath ?? "."}${path.sep}lang`
+        const langDistPath = `${langDistDir}${
+            path.sep
+        }${langName}.json`;
+        try {
+            if (!fs.existsSync(langDistDir)){
+                fs.mkdirSync(langDistDir, { recursive: true });
+            }
+            fs.writeFileSync(langDistPath, JSON.stringify(langConfig, null, 4));
+        } catch (e) {
+            console.error(e);
+            throw e;
+        }
+    }
+};
 
 export const build = async (ironConfig: IronConfig) => {
     console.log(chalk.green("Building..."));
-    try {
-        buildConfig(ironConfig);
-    } catch (e) {
-        return;
-    }
+    buildConfig(ironConfig);
+    buildLang(ironConfig);
     console.log(chalk.green("Built!"));
-}
+};
