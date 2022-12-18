@@ -4,7 +4,7 @@ import { EOL } from "os";
 import path from "path";
 import prompts from "prompts";
 import yaml from "js-yaml";
-import { DEFAULT_LANG_FILE, MAIN_SCRIPT } from "./structures.js";
+import { MAIN_SCRIPT } from "./structures.js";
 
 export enum ProjectType {
     System = "system",
@@ -215,13 +215,13 @@ export const createModuleConfig = async (
     return moduleConfig as FoundryManifest;
 };
 
-const getManifest = async (
+export const getManifest = async (
     ironConfig: IronConfig,
 ) => {
     return yaml.load(fs.readFileSync(path.join(ironConfig.rootPath, `${ironConfig.type}.yml`), 'utf8')) as FoundryManifest;
 }
 
-const saveManifest = async (
+export const saveManifest = async (
     ironConfig: IronConfig,
     manifest: FoundryManifest,
 ) => {
@@ -269,27 +269,4 @@ export const createMainScript = async (ironConfig: IronConfig) => {
         manifest.esmodules.push("main.js");
         saveManifest(ironConfig, manifest);
     }
-}
-
-export const createLanguage = async (ironConfig: IronConfig, languageCode: string, languageName: string, baseLanguage?: string) => {
-    const langPath = path.join(ironConfig.rootPath, "lang", `${languageCode}.yml`);
-    if (!fs.existsSync(langPath)) {
-        fs.mkdirSync(path.join(ironConfig.rootPath, "lang"), { recursive: true });
-    }
-    const baseLangPath = path.join(ironConfig.rootPath, "lang", `${baseLanguage}.yml`);
-    if (baseLanguage && fs.existsSync(baseLangPath)) {
-        fs.copyFileSync(baseLangPath, langPath);
-    } else {
-        fs.writeFileSync(langPath, DEFAULT_LANG_FILE);
-    }
-    const manifest = await getManifest(ironConfig)
-    if (!manifest.languages) {
-        manifest.languages = [];
-    }
-    manifest.languages.push({
-        lang: languageCode,
-        name: languageName,
-        path: `lang/${languageCode}.yml`,
-    });
-    saveManifest(ironConfig, manifest);
 }

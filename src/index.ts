@@ -4,8 +4,9 @@ import fs from "fs";
 import { program } from "commander";
 import path from "path";
 import { build } from "./build.js";
-import { createIronConfig, createLanguage, createMainScript, createModuleConfig, createPkg, createSystemConfig, createTemplateConfig, getIronConfig, ProjectType } from "./project.js";
+import { createIronConfig, createMainScript, createModuleConfig, createPkg, createSystemConfig, createTemplateConfig, getIronConfig, ProjectType } from "./project.js";
 import { downloadFoundry, getFoundryLatestVersion, listFoundryVersions, startFoundry } from "./foundry.js";
+import { createLanguage, updateLanguage } from "./languages.js";
 
 const IRON_VERSION = "0.0.1";
 
@@ -97,7 +98,16 @@ languages.command("add <lang> <name> [base]")
         }
         await createLanguage(ironConfig, lang, name, base || "en");
     });
-
+languages.command("update <lang> [base]")
+    .description("Update a language")
+    .option("-i, --interactive", "Interactive mode")
+    .action(async (lang: string, base: string, options: any) => {
+        let ironConfig = await getIronConfig();
+        if (!ironConfig) {
+            return;
+        }
+        await updateLanguage(ironConfig, lang, base || "en", options.interactive);
+    });
 
 program.parse(process.argv);
 
