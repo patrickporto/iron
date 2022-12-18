@@ -6,6 +6,8 @@ import https from "https";
 import os from "os";
 import unzipper from "unzipper";
 import chalk from "chalk";
+import { IronConfig } from "./project";
+import { spawn } from "child_process";
 
 const getFoundryVersionsBase = () => {
     const basePath = path.join(os.homedir(), ".iron");
@@ -101,3 +103,26 @@ export const listFoundryVersions = () => {
         }
     }
 };
+
+export const startFoundry = (ironConfig: IronConfig, foundryVersion: string) => {
+    const foundryPath = path.join(
+        getFoundryVersionsBase(),
+        foundryVersion,
+    );
+    const foundry = spawn("node", [
+        path.join(foundryPath, "resources", "app", "main.js"),
+        `--dataPath=${ironConfig.foundryData}`,
+        "--port=30000"
+    ])
+    foundry.stdout.on('data', function (data) {
+        process.stdout.write(data.toString());
+    });
+
+    foundry.stderr.on('data', function (data) {
+        process.stdout.write(data.toString());
+    });
+
+    foundry.on('exit', function (code) {
+        process.stdout.write('child process exited with code ' + code?.toString());
+    });
+}
