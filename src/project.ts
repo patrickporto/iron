@@ -4,7 +4,8 @@ import { EOL } from "os";
 import path from "path";
 import prompts from "prompts";
 import yaml from "js-yaml";
-import { MAIN_SCRIPT } from "./structures.js";
+import os from "os";
+import { createFoundryData } from "./foundry.js";
 
 export enum ProjectType {
     System = "system",
@@ -49,7 +50,7 @@ export const getIronConfig = async () => {
     }
 };
 
-export const createIronConfig = async (projectRoot?: string) => {
+export const createIronConfig = async (projectRoot?: string, config?: Partial<IronConfig>) => {
     const ironConfig = await prompts([
         {
             type: "select",
@@ -82,7 +83,7 @@ export const createIronConfig = async (projectRoot?: string) => {
             type: "text",
             name: "foundryData",
             message: "What is the path to your Foundry VTT data directory?",
-            initial: "/home/username/.local/share/FoundryVTT/Data",
+            initial: path.join(os.homedir(), ".iron", "foundrydata"),
         },
     ]);
     if (projectRoot && !fs.existsSync(projectRoot)) {
@@ -90,7 +91,7 @@ export const createIronConfig = async (projectRoot?: string) => {
     }
     fs.writeFileSync(
         path.join(projectRoot || ".", "ironconfig.json"),
-        JSON.stringify(ironConfig, null, 4)
+        JSON.stringify({...config, ...ironConfig}, null, 4)
     );
     try {
         const line = `ironconfig.json${EOL}`;
@@ -104,9 +105,7 @@ export const createIronConfig = async (projectRoot?: string) => {
     return ironConfig as IronConfig;
 };
 
-export const createSystemConfig = async (
-    ironConfig: IronConfig,
-) => {
+export const createSystemConfig = async (ironConfig: IronConfig) => {
     const defaultSystemConfig = {
         id: ironConfig.canonicalName,
         version: "1.0.0",
@@ -179,9 +178,7 @@ export const createTemplateConfig = async (projectRoot: string) => {
     return templateConfig;
 };
 
-export const createModuleConfig = async (
-    ironConfig: IronConfig,
-) => {
+export const createModuleConfig = async (ironConfig: IronConfig) => {
     const defaultModuleConfig = {
         id: ironConfig.canonicalName,
         version: "1.0.0",
@@ -215,36 +212,23 @@ export const createModuleConfig = async (
     return moduleConfig as FoundryManifest;
 };
 
-export const getManifest = async (
-    ironConfig: IronConfig,
-) => {
-    return yaml.load(fs.readFileSync(path.join(ironConfig.rootPath, `${ironConfig.type}.yml`), 'utf8')) as FoundryManifest;
-}
+export const getManifest = async (ironConfig: IronConfig) => {
+    return yaml.load(
+        fs.readFileSync(
+            path.join(ironConfig.rootPath, `${ironConfig.type}.yml`),
+            "utf8"
+        )
+    ) as FoundryManifest;
+};
 
 export const saveManifest = async (
     ironConfig: IronConfig,
-    manifest: FoundryManifest,
+    manifest: FoundryManifest
 ) => {
     fs.writeFileSync(
         path.join(ironConfig.rootPath, `${ironConfig.type}.yml`),
         yaml.dump(manifest)
     );
-}
-
-export const createPkg = async (
-    manifest: FoundryManifest,
-    projectRoot: string
-) => {
-    const pkgPath = path.join(projectRoot, "package.json");
-    if (!fs.existsSync(pkgPath)) {
-        const pkg = {
-            name: manifest.id,
-            version: manifest.version,
-            private: true,
-        };
-
-        fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 4));
-    }
 };
 
 export const createREADME = async (
@@ -258,15 +242,8 @@ export const createREADME = async (
     }
 };
 
-export const createMainScript = async (ironConfig: IronConfig) => {
-    const mainPath = path.join(ironConfig.rootPath, "main.js");
-    if (!fs.existsSync(mainPath)) {
-        fs.writeFileSync(mainPath, MAIN_SCRIPT);
-        const manifest = await getManifest(ironConfig)
-        if (!manifest.esmodules) {
-            manifest.esmodules = [];
-        }
-        manifest.esmodules.push("main.js");
-        saveManifest(ironConfig, manifest);
-    }
+export const createSymbolicLink = async (ironConfig: IronConfig) => {
+    const targetPath = `${ironConfig.foundryData}${path.sep}Data${path.sep}${ironConfig.type}s${path.sep}${ironConfig.canonicalName}`;
+    const sourcePath = ironConfig?.distPath ?? ironConfig.rootPath;
+    fs.symlinkSync(path.resolve(sourcePath), targetPath, "dir");
 }

@@ -19,7 +19,7 @@ const buildConfig = (ironConfig: IronConfig) => {
     let projectConfig;
     try {
         projectConfig = yaml.load(
-            fs.readFileSync(`./${projectConfigName}`, "utf-8")
+            fs.readFileSync(path.join(ironConfig.rootPath, projectConfigName), "utf-8")
         );
     } catch (e) {
         console.log(chalk.red(`${projectConfigName} not found.`));
@@ -44,10 +44,13 @@ const buildConfig = (ironConfig: IronConfig) => {
         console.error(e);
         throw e;
     }
-
+    const distDir = `${ironConfig?.distPath ?? "."}${path.sep}`
+    if (!fs.existsSync(distDir)){
+        fs.mkdirSync(distDir, { recursive: true });
+    }
     try {
         fs.writeFileSync(
-            `${ironConfig?.distPath ?? "."}${path.sep}system.json`,
+            path.join(distDir, "system.json"),
             compiledProjectConfig
         );
     } catch (e) {

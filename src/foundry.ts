@@ -109,6 +109,7 @@ export const startFoundry = (ironConfig: IronConfig, foundryVersion: string) => 
         getFoundryVersionsBase(),
         foundryVersion,
     );
+    createFoundryData(ironConfig);
     const foundry = spawn("node", [
         path.join(foundryPath, "resources", "app", "main.js"),
         `--dataPath=${ironConfig.foundryData}`,
@@ -125,4 +126,11 @@ export const startFoundry = (ironConfig: IronConfig, foundryVersion: string) => 
     foundry.on('exit', function (code) {
         process.stdout.write('child process exited with code ' + code?.toString());
     });
+}
+
+export const createFoundryData = (ironConfig: IronConfig) => {
+    const foundryDataPath = path.join(ironConfig.foundryData, "Data", `${ironConfig.type}s`);
+    if (!fs.existsSync(foundryDataPath)) {
+        fs.mkdirSync(foundryDataPath, { recursive: true });
+    }
 }

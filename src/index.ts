@@ -4,9 +4,10 @@ import fs from "fs";
 import { program } from "commander";
 import path from "path";
 import { build } from "./build.js";
-import { createIronConfig, createMainScript, createModuleConfig, createPkg, createSystemConfig, createTemplateConfig, getIronConfig, ProjectType } from "./project.js";
-import { downloadFoundry, getFoundryLatestVersion, listFoundryVersions, startFoundry } from "./foundry.js";
+import { createIronConfig, createModuleConfig, createSymbolicLink, createSystemConfig, createTemplateConfig, getIronConfig, ProjectType } from "./project.js";
+import { createFoundryData, downloadFoundry, getFoundryLatestVersion, listFoundryVersions, startFoundry } from "./foundry.js";
 import { createLanguage, updateLanguage } from "./languages.js";
+import { createPkg, createTSConfig, createTSMainScript, installDependencies, tsc } from "./tsproject.js";
 
 const IRON_VERSION = "0.0.1";
 
@@ -32,9 +33,7 @@ program.command("link")
             return;
         }
         console.log(chalk.green(`Linking ${ironConfig.type}...`));
-        const targetPath = `${ironConfig.foundryData}${path.sep}Data${path.sep}${ironConfig.type}s${path.sep}${ironConfig.canonicalName}`;
-        const sourcePath = ironConfig?.distPath ?? ironConfig.rootPath;
-        fs.symlinkSync(path.resolve(sourcePath), targetPath, "dir");
+        createSymbolicLink(ironConfig);
         console.log(chalk.green(`Linked ${ironConfig.type}!`));
     });
 
@@ -52,7 +51,8 @@ program.command("new [directory]")
     .description("Create a new project")
     .action(async (directory) => {
         const projectRoot = path.resolve(directory || ".");
-        const ironConfig = await createIronConfig(projectRoot);
+        const ironConfig = await createIronConfig(projectRoot, { distPath: "./dist" });
+        createFoundryData(ironConfig);
         let manifest
         if (ironConfig.type === ProjectType.System) {
             manifest = await createSystemConfig(ironConfig);
@@ -60,9 +60,14 @@ program.command("new [directory]")
         } else {
             manifest = await createModuleConfig(ironConfig);
         }
-        await createPkg(manifest, projectRoot);
-        await createMainScript(ironConfig);
         await createLanguage(ironConfig, "en", "English");
+        await createPkg(manifest, projectRoot);
+        build(ironConfig);
+        createSymbolicLink(ironConfig);
+        await createTSMainScript(ironConfig);
+        createTSConfig(ironConfig);
+        await installDependencies(projectRoot)
+        await tsc(projectRoot)
     });
 
 const foundry = program.command("foundry")
