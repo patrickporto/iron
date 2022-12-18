@@ -5,6 +5,8 @@ import { program } from "commander";
 import path from "path";
 import prompts from "prompts";
 import { EOL } from "os";
+import { build } from "./build.js";
+import { getIronConfig } from "./project.js";
 
 const IRON_VERSION = "0.0.1";
 
@@ -15,7 +17,7 @@ program
     );
 
 program.command("init")
-    .description("Initialize a new module or system")
+    .description("Initialize the project")
     .action(async () => {
         console.log(chalk.green("Initializing..."));
         const ironConfig = await prompts([
@@ -68,14 +70,11 @@ program.command("init")
     });
 
 program.command("link")
-    .description("Link a module or system to Foundry VTT")
-    .action(() => {
-        let ironConfig
-        try {
-            ironConfig = JSON.parse(fs.readFileSync("./ironconfig.json", "utf-8"))
-        } catch(e) {
-            console.log(chalk.red("Could not find ironconfig.json in the current directory."))
-            return
+    .description("Link the project to Foundry VTT")
+    .action(async () => {
+        let ironConfig = await getIronConfig();
+        if (!ironConfig) {
+            return;
         }
         console.log(chalk.green(`Linking ${ironConfig.type}...`));
         const targetPath = `${ironConfig.foundryData}${path.sep}Data${path.sep}${ironConfig.type}s${path.sep}${ironConfig.canonicalName}`;
@@ -83,6 +82,15 @@ program.command("link")
         console.log(chalk.green(`Linked ${ironConfig.type}!`));
     });
 
+program.command("build")
+    .description("Build the project")
+    .action(async () => {
+        let ironConfig = await getIronConfig();
+        if (!ironConfig) {
+            return;
+        }
+        build(ironConfig)
+    });
 
 program.parse(process.argv);
 
