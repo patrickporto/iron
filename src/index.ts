@@ -3,10 +3,8 @@ import chalk from "chalk";
 import fs from "fs";
 import { program } from "commander";
 import path from "path";
-import prompts from "prompts";
-import { EOL } from "os";
 import { build } from "./build.js";
-import { getIronConfig } from "./project.js";
+import { createIronConfig, createModuleConfig, createPkg, createSystemConfig, createTemplateConfig, getIronConfig, ProjectType } from "./project.js";
 import { downloadFoundry, getFoundryLatestVersion, listFoundryVersions, startFoundry } from "./foundry.js";
 
 const IRON_VERSION = "0.0.1";
@@ -21,53 +19,8 @@ program.command("init")
     .description("Initialize the project")
     .action(async () => {
         console.log(chalk.green("Initializing..."));
-        const ironConfig = await prompts([
-            {
-                type: "select",
-                name: "type",
-                message: "What type of project is this?",
-                choices: [
-                    { title: "Module", value: "module" },
-                    { title: "System", value: "system" },
-                ],
-            },
-            {
-                type: "text",
-                name: "canonicalName",
-                message: "What is the canonical name of the project?",
-                initial: path.basename(process.cwd()),
-                validate: (value) => {
-                    if (value.includes(" ")) {
-                        return "Canonical name cannot contain spaces.";
-                    }
-                    return true;
-                }
-            },
-            {
-                type: "text",
-                name: "rootPath",
-                message: "What is the root path of the project?",
-                initial: process.cwd(),
-            },
-            {
-                type: "text",
-                name: "foundryData",
-                message: "What is the path to your Foundry VTT data directory?",
-                initial: "/home/username/.local/share/FoundryVTT/Data",
-            },
-        ]);
-        fs.writeFileSync("./ironconfig.json", JSON.stringify(ironConfig, null, 4));
+        await createIronConfig();
         console.log(chalk.green("Initialized!"));
-        try {
-            const line = `ironconfig.json${EOL}`
-            const gitignore = fs.readFileSync('.gitignore', "utf-8").toString()
-            if (!gitignore.includes(line)) {
-              fs.appendFile('.gitignore', line, (err) => {
-                if (err) throw err
-              })
-            }
-        } catch(e) {
-        }
     });
 
 program.command("link")
@@ -91,6 +44,21 @@ program.command("build")
             return;
         }
         build(ironConfig)
+    });
+
+program.command("new [directory]")
+    .description("Create a new project")
+    .action(async (directory) => {
+        const projectRoot = path.resolve(directory || ".");
+        const ironConfig = await createIronConfig(projectRoot);
+        let manifest
+        if (ironConfig.type === ProjectType.System) {
+            manifest = await createSystemConfig(ironConfig, projectRoot);
+            await createTemplateConfig(projectRoot);
+        } else {
+            manifest = await createModuleConfig(ironConfig, projectRoot);
+        }
+        await createPkg(manifest, projectRoot);
     });
 
 const foundry = program.command("foundry")
