@@ -41,9 +41,9 @@ export const createLanguage = async (
     manifest.languages.push({
         lang: languageCode,
         name: languageName,
-        path: `lang/${languageCode}.yml`,
+        path: `lang/${languageCode}.json`,
     });
-    saveManifest(ironConfig, manifest);
+    await saveManifest(ironConfig, manifest);
 };
 
 export const updateLanguage = async (

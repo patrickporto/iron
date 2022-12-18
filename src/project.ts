@@ -50,8 +50,8 @@ export const getIronConfig = async () => {
     }
 };
 
-export const createIronConfig = async (projectRoot?: string, config?: Partial<IronConfig>) => {
-    const ironConfig = await prompts([
+export const createIronConfig = async (projectRoot?: string, defaultIconConfig?: Partial<IronConfig>) => {
+    const userIronConfig = await prompts([
         {
             type: "select",
             name: "type",
@@ -89,9 +89,10 @@ export const createIronConfig = async (projectRoot?: string, config?: Partial<Ir
     if (projectRoot && !fs.existsSync(projectRoot)) {
         fs.mkdirSync(projectRoot, { recursive: true });
     }
+    const ironConfig = {...defaultIconConfig, ...userIronConfig}
     fs.writeFileSync(
         path.join(projectRoot || ".", "ironconfig.json"),
-        JSON.stringify({...config, ...ironConfig}, null, 4)
+        JSON.stringify(ironConfig, null, 4)
     );
     try {
         const line = `ironconfig.json${EOL}`;

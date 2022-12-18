@@ -4,10 +4,30 @@ import fs from "fs";
 import { program } from "commander";
 import path from "path";
 import { build } from "./build.js";
-import { createIronConfig, createModuleConfig, createSymbolicLink, createSystemConfig, createTemplateConfig, getIronConfig, ProjectType } from "./project.js";
-import { createFoundryData, downloadFoundry, getFoundryLatestVersion, listFoundryVersions, startFoundry } from "./foundry.js";
+import {
+    createIronConfig,
+    createModuleConfig,
+    createSymbolicLink,
+    createSystemConfig,
+    createTemplateConfig,
+    getIronConfig,
+    ProjectType,
+} from "./project.js";
+import {
+    createFoundryData,
+    downloadFoundry,
+    getFoundryLatestVersion,
+    listFoundryVersions,
+    startFoundry,
+} from "./foundry.js";
 import { createLanguage, updateLanguage } from "./languages.js";
-import { createPkg, createTSConfig, createTSMainScript, installDependencies, tsc } from "./tsproject.js";
+import {
+    createPkg,
+    createTSConfig,
+    createTSMainScript,
+    installDependencies,
+    tsc,
+} from "./tsproject.js";
 
 const IRON_VERSION = "0.0.1";
 
@@ -17,7 +37,8 @@ program
         "A powered CLI to improve developer experience for Foundry modules and systems."
     );
 
-program.command("init")
+program
+    .command("init")
     .description("Initialize the project")
     .action(async () => {
         console.log(chalk.green("Initializing..."));
@@ -25,7 +46,8 @@ program.command("init")
         console.log(chalk.green("Initialized!"));
     });
 
-program.command("link")
+program
+    .command("link")
     .description("Link the project to Foundry VTT")
     .action(async () => {
         let ironConfig = await getIronConfig();
@@ -37,23 +59,27 @@ program.command("link")
         console.log(chalk.green(`Linked ${ironConfig.type}!`));
     });
 
-program.command("build")
+program
+    .command("build")
     .description("Build the project")
     .action(async () => {
         let ironConfig = await getIronConfig();
         if (!ironConfig) {
             return;
         }
-        build(ironConfig)
+        await build(ironConfig);
     });
 
-program.command("new [directory]")
+program
+    .command("new [directory]")
     .description("Create a new project")
     .action(async (directory) => {
         const projectRoot = path.resolve(directory || ".");
-        const ironConfig = await createIronConfig(projectRoot, { distPath: "./dist" });
+        const ironConfig = await createIronConfig(projectRoot, {
+            distPath: path.resolve(path.join(directory, "dist")),
+        });
         createFoundryData(ironConfig);
-        let manifest
+        let manifest;
         if (ironConfig.type === ProjectType.System) {
             manifest = await createSystemConfig(ironConfig);
             await createTemplateConfig(projectRoot);
@@ -62,27 +88,29 @@ program.command("new [directory]")
         }
         await createLanguage(ironConfig, "en", "English");
         await createPkg(manifest, projectRoot);
-        build(ironConfig);
-        createSymbolicLink(ironConfig);
         await createTSMainScript(ironConfig);
         createTSConfig(ironConfig);
-        await installDependencies(projectRoot)
-        await tsc(projectRoot)
+        await installDependencies(projectRoot);
+        await tsc(projectRoot);
+        await build(ironConfig);
+        createSymbolicLink(ironConfig);
     });
 
-const foundry = program.command("foundry")
+const foundry = program.command("foundry");
 
-foundry.command("download")
+foundry
+    .command("download")
     .description("Download Foundry VTT")
     .action(downloadFoundry);
 
-
-foundry.command("list")
+foundry
+    .command("list")
     .alias("ls")
     .description("List Foundry VTT versions")
     .action(listFoundryVersions);
 
-foundry.command("start [version]")
+foundry
+    .command("start [version]")
     .description("Start Foundry VTT")
     .action(async (version: string) => {
         let ironConfig = await getIronConfig();
@@ -94,7 +122,8 @@ foundry.command("start [version]")
     });
 
 const languages = program.command("languages").alias("lang");
-languages.command("add <lang> <name> [base]")
+languages
+    .command("add <lang> <name> [base]")
     .description("Add a language")
     .action(async (lang: string, name: string, base: string) => {
         let ironConfig = await getIronConfig();
@@ -103,7 +132,8 @@ languages.command("add <lang> <name> [base]")
         }
         await createLanguage(ironConfig, lang, name, base || "en");
     });
-languages.command("update <lang> [base]")
+languages
+    .command("update <lang> [base]")
     .description("Update a language")
     .option("-i, --interactive", "Interactive mode")
     .action(async (lang: string, base: string, options: any) => {
@@ -111,9 +141,12 @@ languages.command("update <lang> [base]")
         if (!ironConfig) {
             return;
         }
-        await updateLanguage(ironConfig, lang, base || "en", options.interactive);
+        await updateLanguage(
+            ironConfig,
+            lang,
+            base || "en",
+            options.interactive
+        );
     });
 
 program.parse(process.argv);
-
-

@@ -18,10 +18,11 @@ const getFoundryVersionsBase = () => {
 };
 
 export const getFoundryVersions = () => {
-    return fs
+    const versions = fs
         .readdirSync(getFoundryVersionsBase(), { withFileTypes: true })
         .filter((path) => path.isDirectory() && path.name !== "data")
         .map((path) => path.name);
+    return versions.filter((version) => Number(version[0]));
 };
 
 export const getFoundryLatestVersion = () => {
