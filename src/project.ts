@@ -4,6 +4,7 @@ import { EOL } from "os";
 import path from "path";
 import prompts from "prompts";
 import yaml from "js-yaml";
+import { MAIN_SCRIPT } from "./structures.js";
 
 export enum ProjectType {
     System = "system",
@@ -28,6 +29,7 @@ export type FoundryManifest = {
         verified: string;
         maximum: string;
     };
+    esmodules: string[];
 };
 
 export const getIronConfig = async () => {
@@ -210,6 +212,22 @@ export const createModuleConfig = async (
     return moduleConfig as FoundryManifest;
 };
 
+const getManifest = async (
+    ironConfig: IronConfig,
+) => {
+    return yaml.load(fs.readFileSync(path.join(ironConfig.rootPath, `${ironConfig.type}.yml`), 'utf8')) as FoundryManifest;
+}
+
+const saveManifest = async (
+    ironConfig: IronConfig,
+    manifest: FoundryManifest,
+) => {
+    fs.writeFileSync(
+        path.join(ironConfig.rootPath, `${ironConfig.type}.yml`),
+        yaml.dump(manifest)
+    );
+}
+
 export const createPkg = async (
     manifest: FoundryManifest,
     projectRoot: string
@@ -236,3 +254,16 @@ export const createREADME = async (
         fs.writeFileSync(readmePath, readme);
     }
 };
+
+export const createMainScript = async (ironConfig: IronConfig, projectRoot: string) => {
+    const mainPath = path.join(projectRoot, "main.js");
+    if (!fs.existsSync(mainPath)) {
+        fs.writeFileSync(mainPath, MAIN_SCRIPT);
+        const manifest = await getManifest(ironConfig)
+        if (!manifest.esmodules) {
+            manifest.esmodules = [];
+        }
+        manifest.esmodules.push("main.js");
+        saveManifest(ironConfig, manifest);
+    }
+}

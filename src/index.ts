@@ -4,7 +4,7 @@ import fs from "fs";
 import { program } from "commander";
 import path from "path";
 import { build } from "./build.js";
-import { createIronConfig, createModuleConfig, createPkg, createSystemConfig, createTemplateConfig, getIronConfig, ProjectType } from "./project.js";
+import { createIronConfig, createMainScript, createModuleConfig, createPkg, createSystemConfig, createTemplateConfig, getIronConfig, ProjectType } from "./project.js";
 import { downloadFoundry, getFoundryLatestVersion, listFoundryVersions, startFoundry } from "./foundry.js";
 
 const IRON_VERSION = "0.0.1";
@@ -32,7 +32,8 @@ program.command("link")
         }
         console.log(chalk.green(`Linking ${ironConfig.type}...`));
         const targetPath = `${ironConfig.foundryData}${path.sep}Data${path.sep}${ironConfig.type}s${path.sep}${ironConfig.canonicalName}`;
-        fs.symlinkSync(path.resolve(ironConfig.rootPath), targetPath, "dir");
+        const sourcePath = ironConfig?.distPath ?? ironConfig.rootPath;
+        fs.symlinkSync(path.resolve(sourcePath), targetPath, "dir");
         console.log(chalk.green(`Linked ${ironConfig.type}!`));
     });
 
@@ -59,6 +60,7 @@ program.command("new [directory]")
             manifest = await createModuleConfig(ironConfig, projectRoot);
         }
         await createPkg(manifest, projectRoot);
+        await createMainScript(ironConfig, projectRoot);
     });
 
 const foundry = program.command("foundry")
