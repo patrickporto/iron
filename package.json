@@ -12,8 +12,10 @@
         "build": "npx tsc"
     },
     "devDependencies": {
+        "@types/cli-progress": "^3.11.0",
         "@types/node": "^18.11.17",
         "@types/prompts": "^2.4.2",
+        "@types/unzipper": "^0.10.5",
         "nodemon": "^2.0.20",
         "ts-node": "^10.9.1",
         "typescript": "^4.9.4"
@@ -22,10 +24,12 @@
         "@types/glob": "^8.0.0",
         "@types/js-yaml": "^4.0.5",
         "chalk": "^5.2.0",
+        "cli-progress": "^3.11.2",
         "commander": "^9.4.1",
         "glob": "^8.0.3",
         "handlebars": "^4.7.7",
         "js-yaml": "^4.1.0",
-        "prompts": "^2.4.2"
+        "prompts": "^2.4.2",
+        "unzipper": "^0.10.11"
     }
 }

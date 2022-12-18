@@ -7,6 +7,7 @@ import prompts from "prompts";
 import { EOL } from "os";
 import { build } from "./build.js";
 import { getIronConfig } from "./project.js";
+import { downloadFoundry, listFoundryVersions } from "./foundry.js";
 
 const IRON_VERSION = "0.0.1";
 
@@ -91,6 +92,20 @@ program.command("build")
         }
         build(ironConfig)
     });
+
+const foundry = program.command("foundry")
+
+foundry.command("download")
+    .description("Download Foundry VTT")
+    .action(downloadFoundry);
+
+
+foundry.command("list")
+    .alias("ls")
+    .description("List Foundry VTT versions")
+    .action(listFoundryVersions);
+
+
 
 program.parse(process.argv);
 
