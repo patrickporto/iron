@@ -7,6 +7,7 @@ import { build } from "./build.js";
 import {
     createIronConfig,
     createModuleConfig,
+    createREADME,
     createSymbolicLink,
     createSystemConfig,
     createTemplateConfig,
@@ -90,6 +91,7 @@ program
         await createPkg(manifest, projectRoot);
         await createTSMainScript(ironConfig);
         createTSConfig(ironConfig);
+        createREADME(manifest, projectRoot);
         await installDependencies(projectRoot);
         await tsc(projectRoot);
         await build(ironConfig);
