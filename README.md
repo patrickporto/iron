@@ -13,7 +13,7 @@ A powered CLI to improve developer experience for Foundry modules and systems
 # Getting Started
 
 ```
-npm install -g https://github.com/patrickporto/iron.git
+npm install -g git+https://github.com/patrickporto/iron.git
 iron help
 ```
 
