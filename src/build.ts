@@ -46,7 +46,7 @@ const buildConfig = (ironConfig: IronConfig) => {
     }
     try {
         fs.writeFileSync(
-            path.join(distDir, "system.json"),
+            path.join(distDir, `${ironConfig.type}.json`),
             compiledProjectConfig
         );
     } catch (e) {
