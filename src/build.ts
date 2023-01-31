@@ -6,7 +6,7 @@ import yaml from "js-yaml";
 import path from "path";
 import { IronConfig, ProjectType } from "./project.js";
 
-const getProjectPackageJson = async () => {
+const getProjectPackageJson = () => {
     try {
         return JSON.parse(fs.readFileSync("./package.json", "utf-8"));
     } catch (e) {
