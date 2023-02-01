@@ -3,6 +3,7 @@
         "rootDir": "src",
         "outDir": "dist",
         "resolveJsonModule": true,
+        "module": "esnext",
         "moduleResolution": "node",
         "sourceMap": true,
         "target": "es2018",
