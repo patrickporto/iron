@@ -2,7 +2,9 @@
     "name": "iron",
     "version": "1.0.0",
     "main": "./dist/module.js",
-    "exports": "./dist/module.js",
+    "exports": {
+        ".": "./dist/module.js"
+    },
     "type": "module",
     "bin": {
         "iron": "./dist/cli.js"
