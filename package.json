@@ -1,5 +1,5 @@
 {
-    "name": "iron",
+    "name": "@darkmoor/iron",
     "version": "1.0.0",
     "main": "./dist/module.js",
     "type": "module",
