@@ -29,13 +29,17 @@ jobs:
 
             - name: Bump version
               run: |
-                npm version ${{ github.event.release.tag_name }} --no-git-tag-version
-                git config user.name github-actions
-                git config user.email github-actions@github.com
-                git add .
-                git commit -m "chore(release): ${{ github.event.release.tag_name }}"
-                git push origin HEAD:main
+                  npm version ${{ github.event.release.tag_name }} --no-git-tag-version
+                  git config user.name github-actions
+                  git config user.email github-actions@github.com
+                  git add .
+                  git commit -m "chore(release): ${{ github.event.release.tag_name }}"
 
+            - name: Push changes
+              uses: ad-m/github-push-action@master
+              with:
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  branch: main
             - run: npm publish
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
