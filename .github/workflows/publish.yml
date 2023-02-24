@@ -14,6 +14,7 @@ jobs:
         steps:
             - uses: actions/checkout@v2
               with:
+                  persist-credentials: true
                   fetch-depth: 0
             - uses: actions/setup-node@v2
               with:
@@ -30,16 +31,13 @@ jobs:
               run: npm run build
 
             - name: Bump version
-              uses: actions/checkout@v3
-              with:
-                ref: main
               run: |
                   npm version ${{ github.event.release.tag_name }} --no-git-tag-version
                   git config user.name github-actions
                   git config user.email github-actions@github.com
                   git add .
                   git commit -m "chore(release): ${{ github.event.release.tag_name }}"
-                  git push
+                  git push origin HEAD:main
 
             - run: npm publish
               env:
