@@ -1,32 +1,41 @@
 name: Publish Package
 on:
-  release:
-    types: [published]
+    release:
+        types: [published]
 
 jobs:
-  run-action:
-    name: Run action
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
+    run-action:
+        name: Run action
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
 
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: 16.x
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
-          registry-url: 'https://registry.npmjs.org'
-          scope: '@darkmoor'
+        steps:
+            - uses: actions/checkout@v2
+            - uses: actions/setup-node@v2
+              with:
+                  node-version: 16.x
+                  cache: "npm"
+                  cache-dependency-path: package-lock.json
+                  registry-url: "https://registry.npmjs.org"
+                  scope: "@darkmoor"
 
-      - name: Install dependencies
-        run: npm ci
+            - name: Install dependencies
+              run: npm ci
 
-      - name: Build
-        run: npm run build
+            - name: Build
+              run: npm run build
 
-      - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+            - name: Bump version
+              run: |
+                npm version ${{ github.event.release.tag_name }}
+                git config user.name github-actions
+                git config user.email github-actions@github.com
+                git add .
+                git commit -m "chore(release): ${{ github.event.release.tag_name }}"
+                git push
+
+            - run: npm publish
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
