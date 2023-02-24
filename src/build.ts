@@ -33,6 +33,7 @@ const buildConfig = (ironConfig: IronConfig) => {
         );
         compiledProjectConfig = projectConfigTemplate({
             pkg: getProjectPackageJson(),
+            env: process.env,
             ...ironConfig,
         });
     } catch (e) {
