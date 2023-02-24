@@ -30,13 +30,16 @@ jobs:
               run: npm run build
 
             - name: Bump version
+              uses: actions/checkout@v3
+              with:
+                ref: main
               run: |
                   npm version ${{ github.event.release.tag_name }} --no-git-tag-version
                   git config user.name github-actions
                   git config user.email github-actions@github.com
                   git add .
                   git commit -m "chore(release): ${{ github.event.release.tag_name }}"
-                  git push origin HEAD:main
+                  git push
 
             - run: npm publish
               env:
